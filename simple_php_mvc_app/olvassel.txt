@@ -1,0 +1,74 @@
+Megnéztem a linkelt 9 részes tutorialt és
+az alapján összeraktam ezt az alap php-s mvc app-ot.
+Ami már kiegészítés és eltérés ebben az az, hogy
+nem használ sehol .htaccess fájlokat, mert a 
+webszerünk az nginx és nem apache.
+
+Ezek helyett feltöltöttem ide a repo-ba az nginx.conf fájlt.
+Ezt most érdemes lenne értelmezni is.
+
+
+
+++++++
+rövid nginx tutorial
+++++++
+
+A projekt simple_php_mvc_app néven fut és így is érhető el a böngészőben.
+
+http://localhost/simple_php_mvc_app/
+
+Az nginx.conf 64-79. sorában van meghatározva erre a projektre a következők:
+
+Ha a /simple_php_mvc_app/ kérés befut, azt alapértelmezetten
+a html mappán belül keresi, amihez hozzáfűzi fájlként, vagy mappaként 
+a simple_php_mvc_app-t, s ezt követően egy public/index.php-t keres.
+
+Ezen a kérésen belül, de egy 'alkérés' következtén belül bizonyos
+kiterjesztésű fájlokat kérnénk, akkor azokat is a html mappán belül kell keresni.
+Amihez ugye hozzáfűzi mappa/fájlként magát a kérést, s utána kiegészíti a regexet.
+
+A végső kérés pedig minden más fájlkiterjesztésre van.
+Amit még ennél fontos megjegyezni, hogy a főkérés index public/index.php része
+alapból ebbe a blokkba ugraszt minket, hiszen a felette levő nem fedi le a .php fájlok 
+kiszolgálását.
+Először is megtörténik az url rewrite, majd megadjuk, hogy hol fut a php-cgi (parser).
+A többi része pedig nem lényeges.
+
+A webshop_project az úgy épül fel jelenleg, hogy két egyforma nevű mappát kell áthidalni ahhoz,
+hogy ott találjuk magunkat, ahol az index.php található.
+Ezért a böngészőbe mindig localhost/webshop_project/Webshop_project-et kell írni.
+Ez kiküszöbölhető, ha hasonló módon bypassoljuk a 'public' mappát a simple_php_mvc_app mintájára.
+Esetünkben csak annyi a teendő, hogy a kéréseket location /webshop_project/ {} főblokkba írjuk,
+majd ezen belül a mintának megfelelően még két alblokkot létrehozunk, de megadjuk legfelül az index-t,
+ami úgy fog kinézni, hogy index  Webshop_project/index.php; 
+
+Reminder: Minden egyes nginx.conf fájl módosítát követően a StopServices.bat és StartServices.bat-ot el kell
+indítani adminisztrátorként.
+
+Az nginx.conf fájlt egyébként a C:\WNMP\nginx*\conf\ könyvtárba kell helyezni.
+
+
+Az nginx azért is jobb a .htaccess fájloknál, mert egyszerűbb és érthetőbb a felépítése, szintakszisa.
+
+++++++
+egyéb változások a tutorial videó sorozathoz képest
+++++++
+
+A projekt controllerben nem view-t ad vissza egyből, hanem a layoutot,
+amin belül kéri le a kért view-et. Ez azért kell, hogy legyen egy köztponti layout file,
+aminek ahsznosságát már ismerjük. A layout megkapja még az esetleges adatokat is.
+
+Ezen kívül még a layout renderelése előtt egy új módszerrel beállítunk egy baseurl változót,
+amit aztán az összes static (kép/css/js..stb) fájl esetén elé kell íratnunk leginkább a layout.php fájlban.
+Van benne legalább 3 példa is.
+
+A linkeket elméletileg már nem kell ezzel ellátni, bár nem teszteltem, de az egész átállásnak az az értelme, hogy
+a baseurl után controller/method-ként lehessen lekérni az adott dolgokat, szépen el kell készíteni a linkek controllerjeit
+és metódusait ily módon.
+
+A videó 9. része eléggé haszontalan, mert egy keretrendszert használ adatbázis használathoz.
+Ehelyett a már megszokott módon, de azért a videót követve, hogy szabványos-e, átírtam a database.php-t,
+A Query metódus most már bontja is a kapcsolatot.
+A modellekben kell elkészíteni az egyes metódusokat amik használják a Query metódust és visszaadnak valamit.
+Sok helyen azért kell a [0][0], mert a Query alapból egy tömböt ad vissza, amin belül az értékek is tömbök és amikor
+több adatot kell vissza adni, pl. termékek, akkor hasznos az, ha termékek [ termék1[], termék2[]...stb ] 
